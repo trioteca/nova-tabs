@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Laravel\Nova\Contracts\ListableField;
 use Laravel\Nova\Panel;
 use Laravel\Nova\ResourceToolElement;
+
 use function is_array;
 use function is_callable;
 
@@ -61,6 +62,23 @@ class Tabs extends Panel
     }
 
 
+    public static function mutate($name, $fields)
+    {
+        $first = $fields->first();
+
+        if ($first instanceof ResourceToolElement) {
+            return static::make($name)
+                ->withComponent('detail-' . $first->assignedPanel->component)
+                ->withMeta(['fields' => $fields, 'prefixComponent' => false]);
+        }
+
+        return tap($first->assignedPanel, function ($panel) use ($name, $fields) {
+            $panel->name = $name;
+            $panel->withMeta(['fields' => $fields]);
+        });
+    }
+
+
     /**
      * Set the tabs slug.
      *
@@ -69,7 +87,6 @@ class Tabs extends Panel
      */
     public function withSlug($slug): Tabs
     {
-
         $this->slug = is_bool($slug) ? ($slug ? Str::slug($this->preservedName, '_') : null) : $slug;
 
         return $this;
@@ -83,7 +100,6 @@ class Tabs extends Panel
      */
     public function withCurrentColor(string $color): Tabs
     {
-
         $this->currentColor = $color;
 
         return $this;
@@ -97,7 +113,6 @@ class Tabs extends Panel
      */
     public function withErrorColor(string $color): Tabs
     {
-
         $this->errorColor = $color;
 
         return $this;
